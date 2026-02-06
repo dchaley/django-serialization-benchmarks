@@ -14,12 +14,34 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path
+from django.views.decorators.csrf import csrf_exempt
+from strawberry.django.views import GraphQLView
+from .api_strawberry import schema
+from .api_ninja import api
+from .api_drf import DRFPydanticBenchmarkView, DRFJsonBenchmarkView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path("admin/", admin.site.urls),
+    path("graphql/", csrf_exempt(GraphQLView.as_view(schema=schema))),
+    path("api/", api.urls),
+    path(
+        "api/drf-pydantic-benchmark/<str:filename>",
+        DRFPydanticBenchmarkView.as_view(),
+        name="drf_pydantic",
+    ),
+    path(
+        "api/drf-json-benchmark/<str:filename>",
+        DRFJsonBenchmarkView.as_view(),
+        name="drf_json",
+    ),
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path(
+        "api/docs/",
+        SpectacularSwaggerView.as_view(url_name="schema"),
+        name="swagger-ui",
+    ),
 ]

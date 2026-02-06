@@ -22,4 +22,5 @@ dependencies = [
     "matplotlib",
     "PyYAML",
     "requests",
+    "black",
 ]
