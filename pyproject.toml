@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["django_serialization_benchmarks"]
+
+[project]
+name = "django-serialization-benchmarks"
+version = "0.1.0"
+description = "Benchmarks for various Django serialization methods"
+requires-python = ">=3.11"
+dependencies = [
+    "Django",
+    "strawberry-graphql",
+    "pydantic",
+    "django-ninja",
+    "djangorestframework",
+    "drf-pydantic",
+    "drf-spectacular",
+    "strawberry-graphql-django",
+    "matplotlib",
+    "PyYAML",
+    "requests",
+    "black",
+]
