@@ -12,6 +12,8 @@ class EndpointConsistencyTest(TestCase):
             "/api/ninja-benchmark/" + self.filename,
             reverse("drf_pydantic", kwargs={"filename": self.filename}),
             reverse("drf_json", kwargs={"filename": self.filename}),
+            reverse("drf_pydantic_model_dump_renderer", kwargs={"filename": self.filename}),
+            reverse("drf_pydantic_json_renderer", kwargs={"filename": self.filename}),
         ]
 
         for url in endpoints:
@@ -68,8 +70,14 @@ class EndpointConsistencyTest(TestCase):
         
         # 3. DRF JSON
         drf_json_res = self.client.get(reverse("drf_json", kwargs={"filename": filename})).json()
-        
-        # 4. Strawberry Vanilla
+
+        # 4. DRF Model Dump Renderer
+        drf_model_dump_renderer_res = self.client.get(reverse("drf_pydantic_model_dump_renderer", kwargs={"filename": filename})).json()
+
+        # 5. DRF JSON Renderer
+        drf_json_renderer_res = self.client.get(reverse("drf_pydantic_json_renderer", kwargs={"filename": filename})).json()
+
+        # 6. Strawberry Vanilla
         query_vanilla = """
         query ($filename: String!) {
           benchmarkVanillaTypes(filename: $filename) {
@@ -109,6 +117,8 @@ class EndpointConsistencyTest(TestCase):
             ("Ninja", ninja_res),
             ("DRF Pydantic", drf_pydantic_res),
             ("DRF JSON", drf_json_res),
+            ("DRF Model Dump Renderer", drf_model_dump_renderer_res),
+            ("DRF JSON Renderer", drf_json_renderer_res),
             ("Strawberry Vanilla", strawberry_vanilla_res),
             ("Strawberry Pydantic", strawberry_pydantic_res),
         ]

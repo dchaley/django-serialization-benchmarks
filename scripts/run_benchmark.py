@@ -81,6 +81,10 @@ def run_benchmark(
         url = f"http://127.0.0.1:8001/api/drf-pydantic-benchmark/{filename}"
     elif endpoint == "drf_json":
         url = f"http://127.0.0.1:8001/api/drf-json-benchmark/{filename}"
+    elif endpoint == "drf_pydantic_model_dump_renderer":
+        url = f"http://127.0.0.1:8001/api/drf-pydantic-model-dump-renderer-benchmark/{filename}"
+    elif endpoint == "drf_pydantic_json_renderer":
+        url = f"http://127.0.0.1:8001/api/drf-pydantic-json-renderer-benchmark/{filename}"
     else:
         raise ValueError(f"Unknown endpoint: {endpoint}")
 
@@ -207,6 +211,8 @@ if __name__ == "__main__":
             "ninja_pydantic",
             "drf_pydantic",
             "drf_json",
+            "drf_pydantic_model_dump_renderer",
+            "drf_pydantic_json_renderer",
         ],
         default="strawberry_vanilla",
         help="Endpoint to benchmark",

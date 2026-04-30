@@ -21,7 +21,12 @@ from django.views.decorators.csrf import csrf_exempt
 from strawberry.django.views import GraphQLView
 from .api_strawberry import schema
 from .api_ninja import api
-from .api_drf import DRFPydanticBenchmarkView, DRFJsonBenchmarkView
+from .api_drf import (
+    DRFPydanticBenchmarkView,
+    DRFJsonBenchmarkView,
+    DRFPydanticModelDumpRendererView,
+    DRFPydanticJSONRendererView,
+)
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
@@ -37,6 +42,16 @@ urlpatterns = [
         "api/drf-json-benchmark/<str:filename>",
         DRFJsonBenchmarkView.as_view(),
         name="drf_json",
+    ),
+    path(
+        "api/drf-pydantic-model-dump-renderer-benchmark/<str:filename>",
+        DRFPydanticModelDumpRendererView.as_view(),
+        name="drf_pydantic_model_dump_renderer",
+    ),
+    path(
+        "api/drf-pydantic-json-renderer-benchmark/<str:filename>",
+        DRFPydanticJSONRendererView.as_view(),
+        name="drf_pydantic_json_renderer",
     ),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(

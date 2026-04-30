@@ -2,9 +2,11 @@ from typing import List, Dict
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.request import Request
+from rest_framework.renderers import JSONRenderer, BaseRenderer
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
 from drf_pydantic import DrfPydanticSerializer
+from pydantic import TypeAdapter
 from .types_pydantic import BenchmarkRootPydantic, load_pydantic_data
 
 # Cache for memoization
@@ -69,3 +71,53 @@ class DRFPydanticBenchmarkView(APIView):
         # Use the serializer that inherits from DrfPydanticSerializer
         serializer = BenchmarkRootSerializer(data, many=True)
         return Response(serializer.data)
+
+
+class PydanticModelDumpRenderer(JSONRenderer):
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        if isinstance(data, list):
+            data = [
+                item.model_dump(by_alias=True) if hasattr(item, "model_dump") else item
+                for item in data
+            ]
+        elif hasattr(data, "model_dump"):
+            data = data.model_dump(by_alias=True)
+        return super().render(data, accepted_media_type, renderer_context)
+
+
+class PydanticJSONRenderer(BaseRenderer):
+    media_type = "application/json"
+    format = "json"
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        if data is None:
+            return b""
+
+        if isinstance(data, (bytes, str)):
+            return data
+
+        if isinstance(data, list) and data and hasattr(data[0], "model_dump_json"):
+            adapter = TypeAdapter(List[type(data[0])])
+            return adapter.dump_json(data, by_alias=True)
+        elif hasattr(data, "model_dump_json"):
+            return data.model_dump_json(by_alias=True).encode("utf-8")
+
+        return JSONRenderer().render(data, accepted_media_type, renderer_context)
+
+
+class DRFPydanticModelDumpRendererView(APIView):
+    renderer_classes = [PydanticModelDumpRenderer]
+
+    @extend_schema(responses={200: BenchmarkRootPydantic})
+    def get(self, request: Request, filename: str) -> Response:
+        data = load_pydantic_data(filename)
+        return Response(data)
+
+
+class DRFPydanticJSONRendererView(APIView):
+    renderer_classes = [PydanticJSONRenderer]
+
+    @extend_schema(responses={200: BenchmarkRootPydantic})
+    def get(self, request: Request, filename: str) -> Response:
+        data = load_pydantic_data(filename)
+        return Response(data)
