@@ -64,8 +64,8 @@ def generate_chart(suffix=None, output_filename=None, input_dir="results"):
                 }
             )
 
-    # Sort: dataset size first, then endpoint name
-    data.sort(key=lambda x: (x["dataset_size"], x["endpoint"]))
+    # Sort: alphabetical order by endpoint name
+    data.sort(key=lambda x: x["endpoint"])
 
     labels = [d["label"] for d in data]
     averages = [d["average"] for d in data]

@@ -7,7 +7,7 @@ ROOT="$(cd "${DIR}/.." && pwd)"
 mkdir -p "${ROOT}/results/timing"
 mkdir -p "${ROOT}/results/charts"
 
-ENDPOINTS=("strawberry_vanilla" "strawberry_pydantic" "ninja_pydantic" "drf_pydantic" "drf_json" "drf_pydantic_model_dump_renderer" "drf_pydantic_json_renderer" "pydantic_http_response")
+ENDPOINTS=("strawberry_vanilla" "strawberry_pydantic" "ninja_pydantic" "drf_pydantic_serializer" "drf_model_dump" "drf_renderer_pydantic_model_dump" "drf_renderer_pydantic_model_dump_json" "pydantic_http_response")
 CONFIGS=(
     "10 0 0"
     "10 5 5"

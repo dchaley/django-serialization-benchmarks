@@ -55,7 +55,7 @@ class BenchmarkRootSerializer(DrfPydanticSerializer):
     nestedObjects = BenchmarkNestedSerializer(source="nested_objects", many=True)
 
 
-class DRFJsonBenchmarkView(APIView):
+class DRFModelDumpView(APIView):
     @extend_schema(responses={200: BenchmarkRootPydantic})
     def get(self, request: Request, filename: str) -> Response:
         data = load_pydantic_data(filename)
@@ -64,7 +64,7 @@ class DRFJsonBenchmarkView(APIView):
         return Response([item.model_dump(by_alias=True) for item in data])
 
 
-class DRFPydanticBenchmarkView(APIView):
+class DRFPydanticSerializerView(APIView):
     @extend_schema(responses={200: BenchmarkRootSerializer(many=True)})
     def get(self, request: Request, filename: str) -> Response:
         data = load_pydantic_data(filename)
@@ -106,7 +106,7 @@ class PydanticJSONRenderer(BaseRenderer):
         return JSONRenderer().render(data, accepted_media_type, renderer_context)
 
 
-class DRFPydanticModelDumpRendererView(APIView):
+class DRFRendererPydanticModelDumpView(APIView):
     renderer_classes = [PydanticModelDumpRenderer]
 
     @extend_schema(responses={200: BenchmarkRootPydantic})
@@ -133,7 +133,7 @@ def pydantic_http_response_benchmark_view(request, filename: str) -> HttpRespons
     return PydanticHttpResponse(data)
 
 
-class DRFPydanticJSONRendererView(APIView):
+class DRFRendererPydanticModelDumpJson(APIView):
     renderer_classes = [PydanticJSONRenderer]
 
     @extend_schema(responses={200: BenchmarkRootPydantic})

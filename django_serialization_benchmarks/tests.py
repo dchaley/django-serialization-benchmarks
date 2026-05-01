@@ -10,10 +10,10 @@ class EndpointConsistencyTest(TestCase):
     def test_endpoints_return_camel_case(self):
         endpoints = [
             "/api/ninja-benchmark/" + self.filename,
-            reverse("drf_pydantic", kwargs={"filename": self.filename}),
-            reverse("drf_json", kwargs={"filename": self.filename}),
-            reverse("drf_pydantic_model_dump_renderer", kwargs={"filename": self.filename}),
-            reverse("drf_pydantic_json_renderer", kwargs={"filename": self.filename}),
+            reverse("drf_pydantic_serializer", kwargs={"filename": self.filename}),
+            reverse("drf_model_dump", kwargs={"filename": self.filename}),
+            reverse("drf_renderer_pydantic_model_dump", kwargs={"filename": self.filename}),
+            reverse("drf_renderer_pydantic_model_dump_json", kwargs={"filename": self.filename}),
             reverse("pydantic_http_response", kwargs={"filename": self.filename}),
         ]
 
@@ -67,16 +67,16 @@ class EndpointConsistencyTest(TestCase):
         ninja_res = self.client.get(f"/api/ninja-benchmark/{filename}").json()
         
         # 2. DRF Pydantic
-        drf_pydantic_res = self.client.get(reverse("drf_pydantic", kwargs={"filename": filename})).json()
-        
+        drf_pydantic_res = self.client.get(reverse("drf_pydantic_serializer", kwargs={"filename": filename})).json()
+
         # 3. DRF JSON
-        drf_json_res = self.client.get(reverse("drf_json", kwargs={"filename": filename})).json()
+        drf_json_res = self.client.get(reverse("drf_model_dump", kwargs={"filename": filename})).json()
 
         # 4. DRF Model Dump Renderer
-        drf_model_dump_renderer_res = self.client.get(reverse("drf_pydantic_model_dump_renderer", kwargs={"filename": filename})).json()
+        drf_model_dump_renderer_res = self.client.get(reverse("drf_renderer_pydantic_model_dump", kwargs={"filename": filename})).json()
 
         # 5. DRF JSON Renderer
-        drf_json_renderer_res = self.client.get(reverse("drf_pydantic_json_renderer", kwargs={"filename": filename})).json()
+        drf_json_renderer_res = self.client.get(reverse("drf_renderer_pydantic_model_dump_json", kwargs={"filename": filename})).json()
 
         # 6. Pydantic HttpResponse (Vanilla Django)
         pydantic_http_response_res = self.client.get(reverse("pydantic_http_response", kwargs={"filename": filename})).json()

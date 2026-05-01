@@ -77,13 +77,13 @@ def run_benchmark(
         """
     elif endpoint == "ninja_pydantic":
         url = f"http://127.0.0.1:8001/api/ninja-benchmark/{filename}"
-    elif endpoint == "drf_pydantic":
+    elif endpoint == "drf_pydantic_serializer":
         url = f"http://127.0.0.1:8001/api/drf-pydantic-benchmark/{filename}"
-    elif endpoint == "drf_json":
+    elif endpoint == "drf_model_dump":
         url = f"http://127.0.0.1:8001/api/drf-json-benchmark/{filename}"
-    elif endpoint == "drf_pydantic_model_dump_renderer":
+    elif endpoint == "drf_renderer_pydantic_model_dump":
         url = f"http://127.0.0.1:8001/api/drf-pydantic-model-dump-renderer-benchmark/{filename}"
-    elif endpoint == "drf_pydantic_json_renderer":
+    elif endpoint == "drf_renderer_pydantic_model_dump_json":
         url = f"http://127.0.0.1:8001/api/drf-pydantic-json-renderer-benchmark/{filename}"
     elif endpoint == "pydantic_http_response":
         url = f"http://127.0.0.1:8001/api/pydantic-http-response-benchmark/{filename}"
@@ -211,10 +211,10 @@ if __name__ == "__main__":
             "strawberry_vanilla",
             "strawberry_pydantic",
             "ninja_pydantic",
-            "drf_pydantic",
-            "drf_json",
-            "drf_pydantic_model_dump_renderer",
-            "drf_pydantic_json_renderer",
+            "drf_pydantic_serializer",
+            "drf_model_dump",
+            "drf_renderer_pydantic_model_dump",
+            "drf_renderer_pydantic_model_dump_json",
             "pydantic_http_response",
         ],
         default="strawberry_vanilla",
