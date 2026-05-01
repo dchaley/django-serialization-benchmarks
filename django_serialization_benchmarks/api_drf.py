@@ -1,4 +1,5 @@
 from typing import List, Dict
+from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.request import Request
@@ -112,6 +113,24 @@ class DRFPydanticModelDumpRendererView(APIView):
     def get(self, request: Request, filename: str) -> Response:
         data = load_pydantic_data(filename)
         return Response(data)
+
+
+class PydanticHttpResponse(HttpResponse):
+    def __init__(self, data, **kwargs):
+        kwargs.setdefault("content_type", "application/json")
+        if isinstance(data, list) and data and hasattr(data[0], "model_dump_json"):
+            adapter = TypeAdapter(List[type(data[0])])
+            content = adapter.dump_json(data, by_alias=True)
+        elif hasattr(data, "model_dump_json"):
+            content = data.model_dump_json(by_alias=True)
+        else:
+            content = data
+        super().__init__(content, **kwargs)
+
+
+def pydantic_http_response_benchmark_view(request, filename: str) -> HttpResponse:
+    data = load_pydantic_data(filename)
+    return PydanticHttpResponse(data)
 
 
 class DRFPydanticJSONRendererView(APIView):

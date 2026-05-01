@@ -85,6 +85,8 @@ def run_benchmark(
         url = f"http://127.0.0.1:8001/api/drf-pydantic-model-dump-renderer-benchmark/{filename}"
     elif endpoint == "drf_pydantic_json_renderer":
         url = f"http://127.0.0.1:8001/api/drf-pydantic-json-renderer-benchmark/{filename}"
+    elif endpoint == "pydantic_http_response":
+        url = f"http://127.0.0.1:8001/api/pydantic-http-response-benchmark/{filename}"
     else:
         raise ValueError(f"Unknown endpoint: {endpoint}")
 
@@ -213,6 +215,7 @@ if __name__ == "__main__":
             "drf_json",
             "drf_pydantic_model_dump_renderer",
             "drf_pydantic_json_renderer",
+            "pydantic_http_response",
         ],
         default="strawberry_vanilla",
         help="Endpoint to benchmark",

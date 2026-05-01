@@ -26,6 +26,7 @@ from .api_drf import (
     DRFJsonBenchmarkView,
     DRFPydanticModelDumpRendererView,
     DRFPydanticJSONRendererView,
+    pydantic_http_response_benchmark_view,
 )
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
@@ -52,6 +53,11 @@ urlpatterns = [
         "api/drf-pydantic-json-renderer-benchmark/<str:filename>",
         DRFPydanticJSONRendererView.as_view(),
         name="drf_pydantic_json_renderer",
+    ),
+    path(
+        "api/pydantic-http-response-benchmark/<str:filename>",
+        pydantic_http_response_benchmark_view,
+        name="pydantic_http_response",
     ),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(

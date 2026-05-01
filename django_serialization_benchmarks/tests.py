@@ -14,6 +14,7 @@ class EndpointConsistencyTest(TestCase):
             reverse("drf_json", kwargs={"filename": self.filename}),
             reverse("drf_pydantic_model_dump_renderer", kwargs={"filename": self.filename}),
             reverse("drf_pydantic_json_renderer", kwargs={"filename": self.filename}),
+            reverse("pydantic_http_response", kwargs={"filename": self.filename}),
         ]
 
         for url in endpoints:
@@ -77,7 +78,10 @@ class EndpointConsistencyTest(TestCase):
         # 5. DRF JSON Renderer
         drf_json_renderer_res = self.client.get(reverse("drf_pydantic_json_renderer", kwargs={"filename": filename})).json()
 
-        # 6. Strawberry Vanilla
+        # 6. Pydantic HttpResponse (Vanilla Django)
+        pydantic_http_response_res = self.client.get(reverse("pydantic_http_response", kwargs={"filename": filename})).json()
+
+        # 7. Strawberry Vanilla
         query_vanilla = """
         query ($filename: String!) {
           benchmarkVanillaTypes(filename: $filename) {
@@ -119,6 +123,7 @@ class EndpointConsistencyTest(TestCase):
             ("DRF JSON", drf_json_res),
             ("DRF Model Dump Renderer", drf_model_dump_renderer_res),
             ("DRF JSON Renderer", drf_json_renderer_res),
+            ("Pydantic HttpResponse", pydantic_http_response_res),
             ("Strawberry Vanilla", strawberry_vanilla_res),
             ("Strawberry Pydantic", strawberry_pydantic_res),
         ]
