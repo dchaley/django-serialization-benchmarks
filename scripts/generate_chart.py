@@ -1,16 +1,10 @@
 import os
 import yaml
-import re
 import matplotlib.pyplot as plt
 
 import sys
 
 import argparse
-
-
-def get_dataset_size(filename):
-    match = re.search(r"\d+", filename)
-    return int(match.group()) if match else 0
 
 
 def generate_chart(suffix=None, output_filename=None, input_dir="results"):
@@ -33,58 +27,72 @@ def generate_chart(suffix=None, output_filename=None, input_dir="results"):
         return
 
     data = []
+    all_sizes = set()
     num_measured = None
-    dataset_size = None
-    dataset_nested_size = None
-    dataset_nested2_size = None
 
     for filename in files:
         filepath = os.path.join(input_dir, filename)
         with open(filepath, "r") as f:
             content = yaml.safe_load(f)
-            # Remove .yaml extension for the label
-            label = filename.replace(".yaml", "")
             average = content.get("average", 0)
             endpoint = content.get("endpoint", "")
+
+            d_size = content.get("dataset_size")
+            dn_size = content.get("dataset_nested_size")
+            dn2_size = content.get("dataset_nested2_size")
+            size_triplet = (d_size, dn_size, dn2_size)
+            all_sizes.add(size_triplet)
+
             if num_measured is None:
                 num_measured = content.get("num_measured")
-            if dataset_size is None:
-                dataset_size = content.get("dataset_size")
-            if dataset_nested_size is None:
-                dataset_nested_size = content.get("dataset_nested_size")
-            if dataset_nested2_size is None:
-                dataset_nested2_size = content.get("dataset_nested2_size")
 
             data.append(
                 {
-                    "label": label,
                     "average": average,
-                    "dataset_size": get_dataset_size(filename),
                     "endpoint": endpoint,
+                    "size_triplet": size_triplet,
                 }
             )
 
-    # Sort: alphabetical order by endpoint name
-    data.sort(key=lambda x: x["endpoint"])
+    # Sort: alphabetical order by endpoint name, then by size
+    data.sort(key=lambda x: (x["endpoint"], x["size_triplet"]))
 
-    labels = [d["label"] for d in data]
+    unique_sizes = sorted(list(all_sizes))
+    all_same_size = len(unique_sizes) == 1
+
+    labels = []
+    for d in data:
+        if all_same_size:
+            labels.append(d["endpoint"])
+        else:
+            s = d["size_triplet"]
+            labels.append(f"{d['endpoint']} ({s[0]}_{s[1]}_{s[2]})")
+
     averages = [d["average"] for d in data]
 
     plt.figure(figsize=(12, 8))
     bars = plt.bar(labels, averages, color="skyblue")
 
-    plt.xlabel("Benchmark Configuration")
+    plt.xlabel("Endpoint")
     plt.ylabel("Average Time (s)")
 
-    title_parts = []
-    title_parts.append(f"Objs={dataset_size}")
-    title_parts.append(f"Nested Objs={dataset_nested_size}")
-    title_parts.append(f"Subnested Objs={dataset_nested2_size}")
-    title_parts.append(
-        f"Total objs={dataset_size + dataset_size * dataset_nested_size + dataset_size * dataset_nested_size * dataset_nested2_size}"
-    )
+    if all_same_size:
+        dataset_size, dataset_nested_size, dataset_nested2_size = unique_sizes[0]
+        title_parts = []
+        title_parts.append(f"Objs={dataset_size}")
+        title_parts.append(f"Nested Objs={dataset_nested_size}")
+        title_parts.append(f"Subnested Objs={dataset_nested2_size}")
+        total = (
+            dataset_size
+            + (dataset_size * dataset_nested_size)
+            + (dataset_size * dataset_nested_size * dataset_nested2_size)
+        )
+        title_parts.append(f"Total objs={total}")
+        title = "Benchmark Results: " + ", ".join(title_parts)
+    else:
+        size_strs = [f"({s[0]},{s[1]},{s[2]})" for s in unique_sizes]
+        title = "Benchmark Results: Sizes=" + ", ".join(size_strs)
 
-    title = "Benchmark Results: " + ", ".join(title_parts)
     if num_measured is not None:
         title += f" (Measurements={num_measured})"
     plt.title(title)
