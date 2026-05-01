@@ -10,8 +10,11 @@ class EndpointConsistencyTest(TestCase):
     def test_endpoints_return_camel_case(self):
         endpoints = [
             "/api/ninja-benchmark/" + self.filename,
-            reverse("drf_pydantic", kwargs={"filename": self.filename}),
-            reverse("drf_json", kwargs={"filename": self.filename}),
+            reverse("drf_pydantic_serializer", kwargs={"filename": self.filename}),
+            reverse("drf_model_dump", kwargs={"filename": self.filename}),
+            reverse("drf_renderer_pydantic_model_dump", kwargs={"filename": self.filename}),
+            reverse("drf_renderer_pydantic_model_dump_json", kwargs={"filename": self.filename}),
+            reverse("pydantic_http_response", kwargs={"filename": self.filename}),
         ]
 
         for url in endpoints:
@@ -64,12 +67,21 @@ class EndpointConsistencyTest(TestCase):
         ninja_res = self.client.get(f"/api/ninja-benchmark/{filename}").json()
         
         # 2. DRF Pydantic
-        drf_pydantic_res = self.client.get(reverse("drf_pydantic", kwargs={"filename": filename})).json()
-        
+        drf_pydantic_res = self.client.get(reverse("drf_pydantic_serializer", kwargs={"filename": filename})).json()
+
         # 3. DRF JSON
-        drf_json_res = self.client.get(reverse("drf_json", kwargs={"filename": filename})).json()
-        
-        # 4. Strawberry Vanilla
+        drf_json_res = self.client.get(reverse("drf_model_dump", kwargs={"filename": filename})).json()
+
+        # 4. DRF Model Dump Renderer
+        drf_model_dump_renderer_res = self.client.get(reverse("drf_renderer_pydantic_model_dump", kwargs={"filename": filename})).json()
+
+        # 5. DRF JSON Renderer
+        drf_json_renderer_res = self.client.get(reverse("drf_renderer_pydantic_model_dump_json", kwargs={"filename": filename})).json()
+
+        # 6. Pydantic HttpResponse (Vanilla Django)
+        pydantic_http_response_res = self.client.get(reverse("pydantic_http_response", kwargs={"filename": filename})).json()
+
+        # 7. Strawberry Vanilla
         query_vanilla = """
         query ($filename: String!) {
           benchmarkVanillaTypes(filename: $filename) {
@@ -109,6 +121,9 @@ class EndpointConsistencyTest(TestCase):
             ("Ninja", ninja_res),
             ("DRF Pydantic", drf_pydantic_res),
             ("DRF JSON", drf_json_res),
+            ("DRF Model Dump Renderer", drf_model_dump_renderer_res),
+            ("DRF JSON Renderer", drf_json_renderer_res),
+            ("Pydantic HttpResponse", pydantic_http_response_res),
             ("Strawberry Vanilla", strawberry_vanilla_res),
             ("Strawberry Pydantic", strawberry_pydantic_res),
         ]

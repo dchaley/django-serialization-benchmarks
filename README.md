@@ -4,6 +4,17 @@ This project benchmarks various Django serialization methods, including Django R
 
 ![Sample Benchmark Chart](docs/images/sample_chart.png)
 
+## Benchmarked Endpoints
+
+- **drf_model_dump**: A DRF view that manually calls `model_dump(by_alias=True)` on Pydantic objects and returns a standard DRF `Response`. It bypasses DRF serializers but still goes through DRF's `JSONRenderer`.
+- **drf_pydantic_serializer**: Uses standard Django REST Framework Serializers. This is the traditional approach, where each field is explicitly defined in a Serializer class.
+- **drf_renderer_pydantic_model_dump**: Uses a custom DRF Renderer that calls `model_dump(by_alias=True)` on Pydantic models before passing the resulting dictionary to the standard JSON encoder.
+- **drf_renderer_pydantic_model_dump_json**: Uses a custom DRF Renderer that calls `model_dump_json(by_alias=True)` (via `TypeAdapter` for lists) to produce JSON bytes directly, leveraging Pydantic's Rust-based optimization and bypassing intermediate Python dictionaries.
+- **ninja_pydantic**: A Pydantic-based API framework. It uses Pydantic models for both request validation and response serialization, leveraging Pydantic's optimized serialization.
+- **pydantic_http_response**: A standard Django function-based view that returns a custom `PydanticHttpResponse`. This response class uses Pydantic's `model_dump_json` to serialize data directly to JSON bytes, offering a lightweight alternative to DRF.
+- **strawberry_pydantic**: Uses Strawberry's Pydantic integration to derive GraphQL types directly from Pydantic models.
+- **strawberry_vanilla**: Uses standard Strawberry types and fields to define the schema. Serialization is handled by Strawberry's internal execution engine.
+
 ## Generating Sample Data
 
 Before running benchmarks, you need to generate the sample JSON data files that the benchmarks will use.

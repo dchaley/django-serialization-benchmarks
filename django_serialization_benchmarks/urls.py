@@ -21,7 +21,13 @@ from django.views.decorators.csrf import csrf_exempt
 from strawberry.django.views import GraphQLView
 from .api_strawberry import schema
 from .api_ninja import api
-from .api_drf import DRFPydanticBenchmarkView, DRFJsonBenchmarkView
+from .api_drf import (
+    DRFPydanticSerializerView,
+    DRFModelDumpView,
+    DRFRendererPydanticModelDumpView,
+    DRFRendererPydanticModelDumpJson,
+    pydantic_http_response_benchmark_view,
+)
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
@@ -30,13 +36,28 @@ urlpatterns = [
     path("api/", api.urls),
     path(
         "api/drf-pydantic-benchmark/<str:filename>",
-        DRFPydanticBenchmarkView.as_view(),
-        name="drf_pydantic",
+        DRFPydanticSerializerView.as_view(),
+        name="drf_pydantic_serializer",
     ),
     path(
         "api/drf-json-benchmark/<str:filename>",
-        DRFJsonBenchmarkView.as_view(),
-        name="drf_json",
+        DRFModelDumpView.as_view(),
+        name="drf_model_dump",
+    ),
+    path(
+        "api/drf-pydantic-model-dump-renderer-benchmark/<str:filename>",
+        DRFRendererPydanticModelDumpView.as_view(),
+        name="drf_renderer_pydantic_model_dump",
+    ),
+    path(
+        "api/drf-pydantic-json-renderer-benchmark/<str:filename>",
+        DRFRendererPydanticModelDumpJson.as_view(),
+        name="drf_renderer_pydantic_model_dump_json",
+    ),
+    path(
+        "api/pydantic-http-response-benchmark/<str:filename>",
+        pydantic_http_response_benchmark_view,
+        name="pydantic_http_response",
     ),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(

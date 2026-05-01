@@ -1,10 +1,13 @@
 from typing import List, Dict
+from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.request import Request
+from rest_framework.renderers import JSONRenderer, BaseRenderer
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
 from drf_pydantic import DrfPydanticSerializer
+from pydantic import TypeAdapter
 from .types_pydantic import BenchmarkRootPydantic, load_pydantic_data
 
 # Cache for memoization
@@ -52,7 +55,7 @@ class BenchmarkRootSerializer(DrfPydanticSerializer):
     nestedObjects = BenchmarkNestedSerializer(source="nested_objects", many=True)
 
 
-class DRFJsonBenchmarkView(APIView):
+class DRFModelDumpView(APIView):
     @extend_schema(responses={200: BenchmarkRootPydantic})
     def get(self, request: Request, filename: str) -> Response:
         data = load_pydantic_data(filename)
@@ -61,7 +64,7 @@ class DRFJsonBenchmarkView(APIView):
         return Response([item.model_dump(by_alias=True) for item in data])
 
 
-class DRFPydanticBenchmarkView(APIView):
+class DRFPydanticSerializerView(APIView):
     @extend_schema(responses={200: BenchmarkRootSerializer(many=True)})
     def get(self, request: Request, filename: str) -> Response:
         data = load_pydantic_data(filename)
@@ -69,3 +72,71 @@ class DRFPydanticBenchmarkView(APIView):
         # Use the serializer that inherits from DrfPydanticSerializer
         serializer = BenchmarkRootSerializer(data, many=True)
         return Response(serializer.data)
+
+
+class PydanticModelDumpRenderer(JSONRenderer):
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        if isinstance(data, list):
+            data = [
+                item.model_dump(by_alias=True) if hasattr(item, "model_dump") else item
+                for item in data
+            ]
+        elif hasattr(data, "model_dump"):
+            data = data.model_dump(by_alias=True)
+        return super().render(data, accepted_media_type, renderer_context)
+
+
+class PydanticJSONRenderer(BaseRenderer):
+    media_type = "application/json"
+    format = "json"
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        if data is None:
+            return b""
+
+        if isinstance(data, (bytes, str)):
+            return data
+
+        if isinstance(data, list) and data and hasattr(data[0], "model_dump_json"):
+            adapter = TypeAdapter(List[type(data[0])])
+            return adapter.dump_json(data, by_alias=True)
+        elif hasattr(data, "model_dump_json"):
+            return data.model_dump_json(by_alias=True).encode("utf-8")
+
+        return JSONRenderer().render(data, accepted_media_type, renderer_context)
+
+
+class DRFRendererPydanticModelDumpView(APIView):
+    renderer_classes = [PydanticModelDumpRenderer]
+
+    @extend_schema(responses={200: BenchmarkRootPydantic})
+    def get(self, request: Request, filename: str) -> Response:
+        data = load_pydantic_data(filename)
+        return Response(data)
+
+
+class PydanticHttpResponse(HttpResponse):
+    def __init__(self, data, **kwargs):
+        kwargs.setdefault("content_type", "application/json")
+        if isinstance(data, list) and data and hasattr(data[0], "model_dump_json"):
+            adapter = TypeAdapter(List[type(data[0])])
+            content = adapter.dump_json(data, by_alias=True)
+        elif hasattr(data, "model_dump_json"):
+            content = data.model_dump_json(by_alias=True)
+        else:
+            content = data
+        super().__init__(content, **kwargs)
+
+
+def pydantic_http_response_benchmark_view(request, filename: str) -> HttpResponse:
+    data = load_pydantic_data(filename)
+    return PydanticHttpResponse(data)
+
+
+class DRFRendererPydanticModelDumpJson(APIView):
+    renderer_classes = [PydanticJSONRenderer]
+
+    @extend_schema(responses={200: BenchmarkRootPydantic})
+    def get(self, request: Request, filename: str) -> Response:
+        data = load_pydantic_data(filename)
+        return Response(data)
