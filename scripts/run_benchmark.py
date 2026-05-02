@@ -22,6 +22,10 @@ def run_benchmark(
     print(f"Benchmarking {endpoint} with data file {filename}...")
     # 1. Start the Django API
     print("Startup")
+    print(f"  Killing any existing process on port 8001...")
+    subprocess.run(
+        "lsof -t -i :8001 | xargs kill -9 2>/dev/null || true", shell=True, check=False
+    )
     print(f"  Starting Django server...")
     manage_py = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "manage.py")
@@ -178,9 +182,17 @@ def run_benchmark(
         "filename": filename,
         "average": float(statistics.mean(latencies)),
         "min": float(min(latencies)),
-        "p25": float(statistics.quantiles(latencies, n=4)[0]),
+        "p25": (
+            float(statistics.quantiles(latencies, n=4)[0])
+            if len(latencies) >= 2
+            else float(statistics.median(latencies))
+        ),
         "p50": float(statistics.median(latencies)),
-        "p75": float(statistics.quantiles(latencies, n=4)[2]),
+        "p75": (
+            float(statistics.quantiles(latencies, n=4)[2])
+            if len(latencies) >= 2
+            else float(statistics.median(latencies))
+        ),
         "max": float(max(latencies)),
         "std_dev": float(statistics.stdev(latencies)) if len(latencies) > 1 else 0.0,
         # 'benchmark_values': [float(v) for v in latencies],
