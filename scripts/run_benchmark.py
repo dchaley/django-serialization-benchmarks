@@ -16,6 +16,7 @@ def run_benchmark(
     endpoint="strawberry_vanilla",
     output_file=None,
     filename="benchmark_data_100_5_5.json",
+    scenario_name=None,
 ):
     print("–––––––––––––––––––––––")
     print(f"Benchmarking {endpoint} with data file {filename}...")
@@ -169,6 +170,7 @@ def run_benchmark(
 
     stats = {
         "endpoint": endpoint,
+        "scenario_name": scenario_name,
         "num_measured": benchmarks,
         "dataset_size": dataset_size,
         "dataset_nested_size": dataset_nested_size,
@@ -229,12 +231,18 @@ if __name__ == "__main__":
         default="benchmark_data_100_5_5.json",
         help="Specific filename to load from sample_data/",
     )
+    parser.add_argument(
+        "--scenario-name",
+        type=str,
+        help="The name of the benchmark scenario",
+    )
     args = parser.parse_args()
 
     run_benchmark(
-        args.num_warmup,
-        args.num_measured,
-        args.endpoint,
-        args.output_file,
-        args.filename,
+        warmups=args.num_warmup,
+        benchmarks=args.num_measured,
+        endpoint=args.endpoint,
+        output_file=args.output_file,
+        filename=args.filename,
+        scenario_name=args.scenario_name,
     )

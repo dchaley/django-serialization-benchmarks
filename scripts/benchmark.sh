@@ -29,7 +29,7 @@ for config in "${CONFIGS[@]}"; do
     FILES=()
     for endpoint in "${ENDPOINTS[@]}"; do
         OUT_FILE="${ROOT}/results/timing/${endpoint}_${suffix}.yaml"
-        python3 "${DIR}/run_benchmark.py" --endpoint "$endpoint" --filename "benchmark_data_${suffix}.json" --output-file "$OUT_FILE" --num-measured "$NUM_MEASURED"
+        python3 "${DIR}/run_benchmark.py" --endpoint "$endpoint" --filename "benchmark_data_${suffix}.json" --output-file "$OUT_FILE" --num-measured "$NUM_MEASURED" --scenario-name "$suffix"
         FILES+=("$OUT_FILE")
     done
     python3 "${DIR}/generate_chart.py" --series "${FILES[@]}" --output "${ROOT}/results/charts/endpoints_${suffix}.png"
