@@ -76,7 +76,7 @@ def main():
     print("\nGenerating chart...")
     chart_output = os.path.join(charts_dir, f"endpoints_{args.scenario_name}.png")
 
-    # Use the new generate_chart signature from origin/main
+    # Use the generate_chart signature from origin/main
     all_series_data = [load_series_data(output_files)]
     series_labels = [args.scenario_name]
 
