@@ -6,7 +6,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from run_benchmark import run_benchmark
-from generate_chart import generate_chart
+from generate_chart import generate_chart, load_series_data
 
 def main():
     parser = argparse.ArgumentParser(description="Run benchmarks for a specific scenario.")
@@ -61,6 +61,7 @@ def main():
     print(f"Measurements: {args.num_measured}")
     sys.stdout.flush()
 
+    output_files = []
     for endpoint in endpoints:
         output_file = os.path.join(timing_dir, f"{endpoint}_{args.scenario_name}.yaml")
         run_benchmark(
@@ -70,13 +71,19 @@ def main():
             filename=args.data_file,
             scenario_name=args.scenario_name,
         )
+        output_files.append(output_file)
 
     print("\nGenerating chart...")
     chart_output = os.path.join(charts_dir, f"endpoints_{args.scenario_name}.png")
+
+    # Use the new generate_chart signature from origin/main
+    all_series_data = [load_series_data(output_files)]
+    series_labels = [args.scenario_name]
+
     generate_chart(
-        suffix=args.scenario_name,
-        output_filename=chart_output,
-        input_dir=timing_dir
+        all_series=all_series_data,
+        series_labels=series_labels,
+        output_filename=chart_output
     )
     print(f"Benchmark scenario '{args.scenario_name}' complete.")
 
