@@ -31,26 +31,26 @@ This will create various JSON files in the `sample_data/` directory with differe
 
 The benchmark suite automates the process of testing different API endpoints and visualizing the results.
 
-To run the benchmarks:
+To run a benchmark scenario:
 
 ```bash
-bash scripts/benchmark.sh
+python scripts/benchmark.py --scenario-name 1000_5_5 --data-file benchmark_data_1000_5_5.json --output-root results
 ```
 
 ### What happens during the benchmark?
 
-When you run `benchmark.sh`, the following steps are performed for each configured dataset size:
+When you run `benchmark.py`, the following steps are performed:
 
-1.  **Iterates through Endpoints**: The script tests multiple implementations:
+1.  **Iterates through Endpoints**: The script tests multiple implementations for the specified scenario:
     *   **Strawberry GraphQL** (Vanilla and Pydantic-based)
     *   **Django Ninja** (Pydantic-based)
     *   **Django REST Framework** (Pydantic-based and JSON Model)
 2.  **Executes Performance Tests**: For each endpoint, `scripts/run_benchmark.py` starts a temporary Django server, performs a "warm-up" request, and then measures the execution time of multiple subsequent requests to calculate an average.
 3.  **Saves Results**: Individual results for each endpoint/size combination are saved as YAML files in the `results/` directory.
 4.  **Generates Charts**: After testing all endpoints for a specific dataset size, the script calls `scripts/generate_chart.py`. This script:
-    *   Reads the YAML results for that size.
+    *   Reads the YAML results for that scenario.
     *   Creates a bar chart comparing the average response times.
-    *   Saves the chart as a PNG file (e.g., `results/benchmark_chart_100_5_5.png`).
+    *   Saves the chart as a PNG file (e.g., `results/charts/endpoints_1000_5_5.png`).
 
 You can find all raw data and visualization images in the `results/` folder after the script completes.
 
