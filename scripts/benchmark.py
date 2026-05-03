@@ -23,15 +23,21 @@ def main():
         default=20,
         help="Number of benchmark calls (default: 20)",
     )
+    parser.add_argument(
+        "--output-root",
+        type=str,
+        required=True,
+        help="Root directory for output (e.g., results)",
+    )
 
     args = parser.parse_args()
 
     # Resolve paths
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    root_dir = os.path.dirname(script_dir)
+    output_root = os.path.abspath(args.output_root)
 
-    timing_dir = os.path.join(root_dir, "results", "timing")
-    charts_dir = os.path.join(root_dir, "results", "charts")
+    timing_dir = os.path.join(output_root, "timing")
+    charts_dir = os.path.join(output_root, "charts")
 
     os.makedirs(timing_dir, exist_ok=True)
     os.makedirs(charts_dir, exist_ok=True)

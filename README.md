@@ -34,7 +34,7 @@ The benchmark suite automates the process of testing different API endpoints and
 To run a benchmark scenario:
 
 ```bash
-python scripts/benchmark.py --scenario-name 1000_5_5 --data-file benchmark_data_1000_5_5.json
+python scripts/benchmark.py --scenario-name 1000_5_5 --data-file benchmark_data_1000_5_5.json --output-root results
 ```
 
 ### What happens during the benchmark?
