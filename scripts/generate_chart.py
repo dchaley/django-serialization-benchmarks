@@ -81,10 +81,8 @@ def generate_chart(all_series, series_labels, output_filename=None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate benchmark charts.")
     parser.add_argument(
-        "suffix", nargs="?", default=None, help="Suffix to filter benchmark files (backward compatibility)"
-    )
-    parser.add_argument(
         "--series",
+        required=True,
         action="append",
         nargs="+",
         help="One or more files for a data series. Can be specified multiple times."
@@ -95,57 +93,30 @@ if __name__ == "__main__":
         help="Label for each series specified with --series."
     )
     parser.add_argument("--output", help="Output filename for the chart")
-    parser.add_argument(
-        "--input-dir", default="results", help="Directory to look for benchmark files"
-    )
 
     args = parser.parse_args()
 
     all_series_data = []
     series_labels = []
 
-    if args.series:
-        for i, series_files in enumerate(args.series):
-            data = load_series_data(series_files)
-            if data:
-                all_series_data.append(data)
-                if args.series_label and i < len(args.series_label):
-                    series_labels.append(args.series_label[i])
+    for i, series_files in enumerate(args.series):
+        data = load_series_data(series_files)
+        if data:
+            all_series_data.append(data)
+            if args.series_label and i < len(args.series_label):
+                series_labels.append(args.series_label[i])
+            else:
+                # Default label: use size suffix if all files in series have the same one
+                suffixes = set()
+                for f in series_files:
+                    import re
+                    match = re.search(r"_(\d+_\d+_\d+)\.yaml$", f)
+                    if match:
+                        suffixes.add(match.group(1))
+
+                if len(suffixes) == 1:
+                    series_labels.append(list(suffixes)[0])
                 else:
-                    # Default label: use size suffix if all files in series have the same one
-                    suffixes = set()
-                    for f in series_files:
-                        import re
-                        match = re.search(r"_(\d+_\d+_\d+)\.yaml$", f)
-                        if match:
-                            suffixes.add(match.group(1))
-
-                    if len(suffixes) == 1:
-                        series_labels.append(list(suffixes)[0])
-                    else:
-                        series_labels.append(f"Series {i + 1}")
-    else:
-        # Backward compatibility
-        input_dir = args.input_dir
-        if not os.path.exists(input_dir):
-             # Try timing subdir
-             if os.path.exists(os.path.join(input_dir, "timing")):
-                 input_dir = os.path.join(input_dir, "timing")
-
-        if args.suffix:
-            pattern = f"_{args.suffix}.yaml"
-            files = [os.path.join(input_dir, f) for f in os.listdir(input_dir) if f.endswith(pattern)]
-            if not args.output:
-                args.output = f"benchmark_chart_{args.suffix}.png"
-        else:
-            files = [os.path.join(input_dir, f) for f in os.listdir(input_dir) if f.endswith(".yaml")]
-            if not args.output:
-                args.output = "benchmark_chart.png"
-
-        if files:
-            data = load_series_data(files)
-            if data:
-                all_series_data.append(data)
-                series_labels.append(args.suffix if args.suffix else "Results")
+                    series_labels.append(f"Series {i + 1}")
 
     generate_chart(all_series_data, series_labels, args.output)
