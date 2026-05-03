@@ -26,8 +26,11 @@ NUM_MEASURED=${1:-50}
 for config in "${CONFIGS[@]}"; do
     read -r size l1 l2 <<< "$config"
     suffix="${size}_${l1}_${l2}"
+    FILES=()
     for endpoint in "${ENDPOINTS[@]}"; do
-        "${ROOT}/.venv/bin/python" "${DIR}/run_benchmark.py" --endpoint "$endpoint" --filename "benchmark_data_${suffix}.json" --output-file "${ROOT}/results/timing/${endpoint}_${suffix}.yaml" --num-measured "$NUM_MEASURED"
+        OUT_FILE="${ROOT}/results/timing/${endpoint}_${suffix}.yaml"
+        python3 "${DIR}/run_benchmark.py" --endpoint "$endpoint" --filename "benchmark_data_${suffix}.json" --output-file "$OUT_FILE" --num-measured "$NUM_MEASURED" --scenario-name "$suffix"
+        FILES+=("$OUT_FILE")
     done
-    "${ROOT}/.venv/bin/python3" "${DIR}/generate_chart.py" "${suffix}" --input-dir "${ROOT}/results/timing" --output "${ROOT}/results/charts/endpoints_${suffix}.png"
+    python3 "${DIR}/generate_chart.py" --series "${FILES[@]}" --output "${ROOT}/results/charts/endpoints_${suffix}.png"
 done
