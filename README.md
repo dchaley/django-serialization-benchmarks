@@ -34,12 +34,12 @@ The benchmark suite automates the process of testing different API endpoints and
 To run the benchmarks:
 
 ```bash
-bash scripts/benchmark.sh
+python scripts/benchmark.py --scenario-name 1000_5_5 --data-file benchmark_data_1000_5_5.json
 ```
 
 ### What happens during the benchmark?
 
-When you run `benchmark.sh`, the following steps are performed for each configured dataset size:
+When you run `benchmark.py`, the following steps are performed for the specified dataset:
 
 1.  **Iterates through Endpoints**: The script tests multiple implementations:
     *   **Strawberry GraphQL** (Vanilla and Pydantic-based)

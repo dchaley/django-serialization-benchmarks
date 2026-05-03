@@ -30,6 +30,7 @@ def run_benchmark(
     manage_py = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "manage.py")
     )
+    print(f"  Executing: {sys.executable} {manage_py} runserver 8001")
     server_process = subprocess.Popen(
         [sys.executable, manage_py, "runserver", "8001"],
         stdout=subprocess.DEVNULL,
