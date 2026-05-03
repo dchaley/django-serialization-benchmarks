@@ -54,6 +54,20 @@ When you run `benchmark.sh`, the following steps are performed for each configur
 
 You can find all raw data and visualization images in the `results/` folder after the script completes.
 
+### Comparing Results
+
+You can also generate charts that compare multiple benchmark runs side-by-side using the `--series` and `--series-label` arguments.
+
+```bash
+python scripts/generate_chart.py \
+    --series results/timing/*_1000_5_5.yaml \
+    --series results/timing/*_100_5_5.yaml \
+    --series-label "Size 1000" --series-label "Size 100" \
+    --output docs/images/comparison_chart.png
+```
+
+![Comparison Benchmark Chart](docs/images/comparison_chart.png)
+
 ## Running Tests
 
 To verify that all endpoints return consistent data and follow the camelCase naming convention, run the unit tests:

@@ -7,107 +7,71 @@ import sys
 import argparse
 
 
-def generate_chart(suffix=None, output_filename=None, input_dir="results"):
-    if suffix:
-        pattern = f"_{suffix}.yaml"
-        files = [f for f in os.listdir(input_dir) if f.endswith(pattern)]
-        if not output_filename:
-            output_filename = f"benchmark_chart_{suffix}.png"
-    else:
-        files = [f for f in os.listdir(input_dir) if f.endswith(".yaml")]
-        if not output_filename:
-            output_filename = "benchmark_chart.png"
+import numpy as np
 
-    if not files:
-        print(
-            f"No files found for suffix: {suffix}"
-            if suffix
-            else f"No yaml files found in {input_dir}/"
-        )
-        return
 
+def load_series_data(files):
     data = []
-    all_sizes = set()
-    num_measured = None
-
-    for filename in files:
-        filepath = os.path.join(input_dir, filename)
+    for filepath in files:
+        if not os.path.exists(filepath):
+            print(f"Warning: File not found: {filepath}")
+            continue
         with open(filepath, "r") as f:
             content = yaml.safe_load(f)
-            average = content.get("average", 0)
-            endpoint = content.get("endpoint", "")
+            data.append(content)
+    return data
 
-            d_size = content.get("dataset_size")
-            dn_size = content.get("dataset_nested_size")
-            dn2_size = content.get("dataset_nested2_size")
-            size_triplet = (d_size, dn_size, dn2_size)
-            all_sizes.add(size_triplet)
 
-            if num_measured is None:
-                num_measured = content.get("num_measured")
+def generate_chart(all_series, series_labels, output_filename=None):
+    if not all_series:
+        print("No data series provided.")
+        return
 
-            data.append(
-                {
-                    "average": average,
-                    "endpoint": endpoint,
-                    "size_triplet": size_triplet,
-                }
-            )
+    if not output_filename:
+        output_filename = "benchmark_chart.png"
 
-    # Sort: alphabetical order by endpoint name, then by size
-    data.sort(key=lambda x: (x["endpoint"], x["size_triplet"]))
+    # Identify all unique endpoints across all series
+    endpoints = set()
+    for series in all_series:
+        for entry in series:
+            endpoints.add(entry.get("endpoint", "unknown"))
+    endpoints = sorted(list(endpoints))
 
-    unique_sizes = sorted(list(all_sizes))
-    all_same_size = len(unique_sizes) == 1
+    # Prepare data for plotting
+    num_series = len(all_series)
+    num_endpoints = len(endpoints)
+    x = np.arange(num_endpoints)
+    width = 0.8 / num_series
 
-    labels = []
-    for d in data:
-        if all_same_size:
-            labels.append(d["endpoint"])
-        else:
-            s = d["size_triplet"]
-            labels.append(f"{d['endpoint']} ({s[0]}_{s[1]}_{s[2]})")
+    fig, ax = plt.subplots(figsize=(12, 8))
 
-    averages = [d["average"] for d in data]
+    for i, (series, label) in enumerate(zip(all_series, series_labels)):
+        mapping = {entry.get("endpoint", "unknown"): entry.get("average", 0) for entry in series}
+        averages = [mapping.get(endpoint, 0) for endpoint in endpoints]
 
-    plt.figure(figsize=(12, 8))
-    bars = plt.bar(labels, averages, color="skyblue")
+        offset = (i - (num_series - 1) / 2) * width
+        bars = ax.bar(x + offset, averages, width, label=label)
 
-    plt.xlabel("Endpoint")
-    plt.ylabel("Average Time (s)")
+        # Add values on top of bars
+        for bar in bars:
+            yval = bar.get_height()
+            if yval > 0:
+                ax.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    yval,
+                    f"{yval:.4f}",
+                    va="bottom",
+                    ha="center",
+                    fontsize=8,
+                    rotation=90 if num_series > 2 else 0
+                )
 
-    if all_same_size:
-        dataset_size, dataset_nested_size, dataset_nested2_size = unique_sizes[0]
-        title_parts = []
-        title_parts.append(f"Objs={dataset_size}")
-        title_parts.append(f"Nested Objs={dataset_nested_size}")
-        title_parts.append(f"Subnested Objs={dataset_nested2_size}")
-        total = (
-            dataset_size
-            + (dataset_size * dataset_nested_size)
-            + (dataset_size * dataset_nested_size * dataset_nested2_size)
-        )
-        title_parts.append(f"Total objs={total}")
-        title = "Benchmark Results: " + ", ".join(title_parts)
-    else:
-        size_strs = [f"({s[0]},{s[1]},{s[2]})" for s in unique_sizes]
-        title = "Benchmark Results: Sizes=" + ", ".join(size_strs)
-
-    if num_measured is not None:
-        title += f" (Measurements={num_measured})"
-    plt.title(title)
-    plt.xticks(rotation=45, ha="right")
-
-    # Add values on top of bars
-    for bar in bars:
-        yval = bar.get_height()
-        plt.text(
-            bar.get_x() + bar.get_width() / 2,
-            yval,
-            round(yval, 4),
-            va="bottom",
-            ha="center",
-        )
+    ax.set_xlabel("Endpoint")
+    ax.set_ylabel("Average Time (s)")
+    ax.set_title("Benchmark Comparison")
+    ax.set_xticks(x)
+    ax.set_xticklabels(endpoints, rotation=45, ha="right")
+    ax.legend()
 
     plt.tight_layout()
     plt.savefig(output_filename)
@@ -117,12 +81,42 @@ def generate_chart(suffix=None, output_filename=None, input_dir="results"):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate benchmark charts.")
     parser.add_argument(
-        "suffix", nargs="?", default=None, help="Suffix to filter benchmark files"
+        "--series",
+        required=True,
+        action="append",
+        nargs="+",
+        help="One or more files for a data series. Can be specified multiple times."
+    )
+    parser.add_argument(
+        "--series-label",
+        action="append",
+        help="Label for each series specified with --series."
     )
     parser.add_argument("--output", help="Output filename for the chart")
-    parser.add_argument(
-        "--input-dir", default="results", help="Directory to look for benchmark files"
-    )
 
     args = parser.parse_args()
-    generate_chart(args.suffix, args.output, args.input_dir)
+
+    all_series_data = []
+    series_labels = []
+
+    for i, series_files in enumerate(args.series):
+        data = load_series_data(series_files)
+        if data:
+            all_series_data.append(data)
+            if args.series_label and i < len(args.series_label):
+                series_labels.append(args.series_label[i])
+            else:
+                # Default label: use size suffix if all files in series have the same one
+                suffixes = set()
+                for f in series_files:
+                    import re
+                    match = re.search(r"_(\d+_\d+_\d+)\.yaml$", f)
+                    if match:
+                        suffixes.add(match.group(1))
+
+                if len(suffixes) == 1:
+                    series_labels.append(list(suffixes)[0])
+                else:
+                    series_labels.append(f"Series {i + 1}")
+
+    generate_chart(all_series_data, series_labels, args.output)
